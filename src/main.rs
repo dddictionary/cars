@@ -25,7 +25,7 @@
 // src/main.rs
 use clap::Parser;
 use std::{sync::atomic::{AtomicBool, Ordering}, thread, time::Duration};
-use cars::{engine::Automaton, preset::apply_preset, rules::Rule};
+use cars::{engine::Automaton, preset::apply_preset, rules::Rule, ui::tui};
 use std::sync::Arc;
 
 /// CLI options for the cellular automata simulation
@@ -52,6 +52,11 @@ struct Cli {
     /// Optional preset pattern to initialize the grid
     #[arg(long)]
     preset: Option<String>,
+
+    /// Optional ui to ouput the result to. Ideally in the future there would be an option for
+    /// outputting to gifs, and other file formats. 
+    #[arg(long)]
+    ui: Option<String>,
 }
 
 fn main() {
@@ -72,24 +77,14 @@ fn main() {
     }
 
     // TODO: Run the simulation for the specified number of steps
-    if let Some(steps) = cli.steps {
-        for _ in 0..steps {
-            sim.draw();
-            sim.tick();
-            thread::sleep(Duration::from_millis(100));
-        }
-    } else {
-        let running = Arc::new(AtomicBool::new(true));
-        let r = running.clone();
-
-        ctrlc::set_handler(move || {
-            r.store(false, Ordering::SeqCst);
-        }).expect("Error setting CTRL_C handler");
-
-        while running.load(Ordering::SeqCst) {
-            sim.draw();
-            sim.tick();
-            thread::sleep(Duration::from_millis(100));
+    if let Some(ui) = cli.ui {
+        match ui.as_str() {
+            "tui" => {
+                tui::run_tui(&mut sim);
+            },
+            _ => {
+                todo!("Other forms of display are not supported")
+            }
         }
     }
 }
