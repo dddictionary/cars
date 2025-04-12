@@ -72,6 +72,25 @@ impl Automaton {
 
         self.grid = new_grid;
     }
+    
+
+    pub fn set_alive(&mut self, x: usize, y: usize) {
+        if x < self.width && y < self.height {
+            let idx = self.index(x, y);
+            self.grid[idx] = Cell::Alive;
+        }
+    }
+
+    pub fn draw(&self) {
+        println!("---");
+        for y in 0..self.height {
+            for x in 0..self.width {
+                let cell = self.grid[self.index(x,y)];
+                print!("{}", if cell == Cell::Alive { "█" } else { " " });
+            }
+            println!();
+        }
+    }
 
     /// Converts 2D coordinates (x, y) to a 1D index in the grid vector.
     ///
