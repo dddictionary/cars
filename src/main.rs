@@ -24,9 +24,7 @@
 /// - TUI frontend toggle
 // src/main.rs
 use clap::Parser;
-use std::{sync::atomic::{AtomicBool, Ordering}, thread, time::Duration};
 use cars::{engine::Automaton, preset::apply_preset, rules::Rule, ui::tui};
-use std::sync::Arc;
 
 /// CLI options for the cellular automata simulation
 #[derive(Parser, Debug)]
@@ -62,28 +60,33 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
-    // Parse the rule string
     let rule = Rule::from_str(&cli.rule).expect("Invalid rule format");
-
-    // Initialize the simulation grid
     let mut sim = Automaton::new(cli.width, cli.height, rule);
 
-    // TODO: Apply preset pattern to seed the grid
-    if let Some(name) = cli.preset.as_deref() {
-        if let Err(e) = apply_preset(name, &mut sim) {
-            eprintln!("Error: {}", e);
-            return;
-        }
-    }
+    //if let Some(name) = cli.preset.as_deref() {
+    //    if let Err(e) = apply_preset(name, &mut sim) {
+    //        eprintln!("Error: {}", e);
+    //        return;
+    //    }
+    //}
 
-    // TODO: Run the simulation for the specified number of steps
-    if let Some(ui) = cli.ui {
-        match ui.as_str() {
-            "tui" => {
-                tui::run_tui(&mut sim);
-            },
-            _ => {
-                todo!("Other forms of display are not supported")
+    let preset_name = cli.preset.unwrap();
+
+    match cli.ui.as_deref() {
+        Some("tui") => {
+            if let Err(e) = tui::run_tui(&mut sim, &preset_name) {
+                eprintln!("TUI error: {}", e);
+            }
+        }
+        Some(other) => {
+            eprintln!("Unsupported UI mode: {other}");
+        }
+        None => {
+            // fallback to plain terminal mode
+            loop {
+                println!("{}", sim.as_string());
+                sim.tick();
+                std::thread::sleep(std::time::Duration::from_millis(150));
             }
         }
     }

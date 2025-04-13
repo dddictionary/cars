@@ -12,10 +12,10 @@ pub enum Cell {
 /// It holds the current grid state, its dimensions, and the rule used
 /// to evolve the grid from one generation to the next.
 pub struct Automaton {
-    pub width: usize,       // Number of columns in the grid
-    pub height: usize,      // Number of rows in the grid
-    pub grid: Vec<Cell>,    // 1D flattened representation of the 2D grid
-    pub rule: Rule,         // Birth/survival rules that define cell behavior
+    pub width: usize,    // Number of columns in the grid
+    pub height: usize,   // Number of rows in the grid
+    pub grid: Vec<Cell>, // 1D flattened representation of the 2D grid
+    pub rule: Rule,      // Birth/survival rules that define cell behavior
 }
 
 impl Automaton {
@@ -66,13 +66,12 @@ impl Automaton {
                             Cell::Dead
                         }
                     }
-                } 
+                }
             }
         }
 
         self.grid = new_grid;
     }
-    
 
     pub fn set_alive(&mut self, x: usize, y: usize) {
         if x < self.width && y < self.height {
@@ -81,15 +80,17 @@ impl Automaton {
         }
     }
 
-    pub fn draw(&self) {
-        println!("---");
+    pub fn as_string(&self) -> String {
+        let mut output = String::new();
         for y in 0..self.height {
             for x in 0..self.width {
-                let cell = self.grid[self.index(x,y)];
-                print!("{}", if cell == Cell::Alive { "█" } else { " " });
+                let cell = self.grid[self.index(x, y)];
+                output.push(if cell == Cell::Alive { '█' } else { ' ' });
             }
-            println!();
+
+            output.push('\n');
         }
+        output
     }
 
     /// Converts 2D coordinates (x, y) to a 1D index in the grid vector.
@@ -128,18 +129,16 @@ impl Automaton {
 
                 let nx = x as isize + dx;
                 let ny = y as isize + dy;
-                if nx >= 0 && nx < self.width as isize && ny >= 0 && ny < self.height as isize{
+                if nx >= 0 && nx < self.width as isize && ny >= 0 && ny < self.height as isize {
                     // if the cell is within the grid, we start counting
                     let idx = self.index(nx as usize, ny as usize);
-                    if self.grid[idx]== Cell::Alive {
+                    if self.grid[idx] == Cell::Alive {
                         count += 1
                     }
                 }
-
             }
         }
 
         count
-
     }
 }

@@ -1,46 +1,38 @@
-use crate::engine::Automaton;
-use ratatui::{DefaultTerminal, Frame};
-use crossterm::event::{self, Event};
+use crate::{engine::Automaton, preset::apply_preset};
 use color_eyre::Result;
+use crossterm::event::{self, Event};
+use ratatui::{
+    layout::Rect,
+    widgets::{Block, Borders, Paragraph},
+    DefaultTerminal, Frame,
+};
 
-pub fn run_tui(_sim: &mut Automaton) -> Result<()> {
+pub fn run_tui(sim: &mut Automaton, preset_name: &str) -> Result<()> {
     color_eyre::install()?;
     let terminal = ratatui::init();
-    let result = run(terminal);
+    let term_size = ratatui::prelude::Terminal::size(&terminal)?;
+    let visible_width = term_size.width as usize;
+    let visible_height = term_size.height as usize;
+    let _ = apply_preset(preset_name, sim, visible_width, visible_height);
+
+    let result = run(terminal, sim);
     ratatui::restore();
     result
 }
 
-fn run(mut terminal: DefaultTerminal) -> Result<()> {
+fn run(mut terminal: DefaultTerminal, sim: &mut Automaton) -> Result<()> {
     loop {
-        terminal.draw(render)?;
+        terminal.draw(|frame| render(frame, sim))?;
+        sim.tick();
         if matches!(event::read()?, Event::Key(_)) {
-            break Ok(())
+            break Ok(());
         }
     }
 }
 
-fn render(frame: &mut Frame) {
-    frame.render_widget("Hello World!", frame.area());
-    //
-    //if let Some(steps) = cli.steps {
-    //    for _ in 0..steps {
-    //        sim.draw();
-    //        sim.tick();
-    //        thread::sleep(Duration::from_millis(100));
-    //    }
-    //} else {
-    //    let running = Arc::new(AtomicBool::new(true));
-    //    let r = running.clone();
-    //
-    //    ctrlc::set_handler(move || {
-    //        r.store(false, Ordering::SeqCst);
-    //    }).expect("Error setting CTRL_C handler");
-    //
-    //    while running.load(Ordering::SeqCst) {
-    //        sim.draw();
-    //        sim.tick();
-    //        thread::sleep(Duration::from_millis(100));
-    //    }
-    //}
+fn render(frame: &mut Frame, sim: &Automaton) {
+    let area: Rect = frame.area();
+    let block = Paragraph::new(sim.as_string())
+        .block(Block::default().title("Automation").borders(Borders::ALL));
+    frame.render_widget(block, area);
 }
