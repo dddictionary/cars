@@ -61,7 +61,7 @@ cargo run -- --preset blinker --width 30 --height 30 --ui tui
 
 ---
 
-## 🧩 Rule Syntax
+## Rule Syntax
 
 Uses standard [Life-like cellular automaton](https://conwaylife.com/wiki/Life-like_cellular_automaton) notation:
 
@@ -98,5 +98,3 @@ Example:
 MIT
 
 ---
-
-## 👨‍💻 Author
