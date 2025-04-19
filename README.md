@@ -22,7 +22,7 @@
 cargo build --release
 ```
 
-### ▶ Run with default options
+### Run with default options
 
 ```bash
 cargo run
@@ -48,7 +48,7 @@ cargo run -- --preset blinker --width 30 --height 30 --ui tui
 
 ---
 
-## 🔧 CLI Options
+## CLI Options
 
 | Flag           | Description                                                         | Default      |
 |----------------|---------------------------------------------------------------------|--------------|
