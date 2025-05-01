@@ -121,20 +121,21 @@ impl Automaton {
     /// Out-of-bounds neighbors are ignored (i.e., no wraparound).
     fn live_neighbor_count(&self, x: usize, y: usize) -> u8 {
         let mut count = 0;
-        for dx in [-1, 0, 1] {
-            for dy in [-1, 0, 1] {
+        let width = self.width as isize;
+        let height = self.height as isize;
+
+        for dy in [-1, 0, 1] {
+            for dx in [-1, 0, 1] {
                 if dx == 0 && dy == 0 {
                     continue;
                 }
 
-                let nx = x as isize + dx;
-                let ny = y as isize + dy;
-                if nx >= 0 && nx < self.width as isize && ny >= 0 && ny < self.height as isize {
-                    // if the cell is within the grid, we start counting
-                    let idx = self.index(nx as usize, ny as usize);
-                    if self.grid[idx] == Cell::Alive {
-                        count += 1
-                    }
+                let nx = (x as isize + dx + width) % width;
+                let ny = (y as isize + dy + height) % height;
+
+                let idx = self.index(nx as usize, ny as usize);
+                if self.grid[idx] == Cell::Alive {
+                    count += 1;
                 }
             }
         }

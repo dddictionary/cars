@@ -1,30 +1,6 @@
-/// CLI-driven entry point for the cellular automata simulation.
-///
-/// Responsibilities:
-/// - Accepts arguments from the user to configure the simulation:
-///     - Rule string (e.g., "B3/S23")
-///     - Grid dimensions (width x height)
-///     - Number of generations to simulate
-///     - Optional initial pattern file (or built-in presets)
-/// - Initializes the automaton grid
-/// - Seeds the grid based on input (or defaults to a known pattern)
-/// - Runs the simulation for the given number of generations
-/// - Prints each generation to the terminal using ASCII output
-///
-/// # CLI Argument Specification
-/// - `--rule <RULE>`: A rule string like "B3/S23" (default: "B3/S23")
-/// - `--width <W>` and `--height <H>`: Grid dimensions (default: 10x10)
-/// - `--steps <N>`: Number of generations to run (default: 10)
-/// - `--preset <PATTERN>`: Optional preset to seed the grid (e.g., "glider", "blinker")
-///
-/// # Future Extensions
-/// - Support for random seeding
-/// - Option to save output as a file (e.g., a GIF or text log)
-/// - Interactive mode (step/pause/resume)
-/// - TUI frontend toggle
-// src/main.rs
 use clap::Parser;
 use cars::{engine::Automaton, preset::apply_preset, rules::Rule, ui::tui};
+use ratatui::prelude::Terminal; // only needed to get terminal size
 
 /// CLI options for the cellular automata simulation
 #[derive(Parser, Debug)]
@@ -36,12 +12,14 @@ struct Cli {
     rule: String,
 
     /// Width of the grid
-    #[arg(long, default_value_t = 10)]
-    width: usize,
+    // #[arg(long, default_value_t = 10)]
+    #[arg(long)]
+    width: Option<usize>,
 
     /// Height of the grid
-    #[arg(long, default_value_t = 10)]
-    height: usize,
+    // #[arg(long, default_value_t = 10)]
+    #[arg(long)]
+    height: Option<usize>,
 
     /// Number of steps/generations to simulate
     #[arg(long)]
@@ -60,21 +38,35 @@ struct Cli {
 fn main() {
     let cli = Cli::parse();
 
+    let (width, height) = match (cli.width, cli.height) {
+        (Some(w), Some(h)) => (w, h),
+        _ => {
+            let term = Terminal::new(ratatui::backend::CrosstermBackend::new(std::io::stdout())).unwrap();
+            let size = term.size().unwrap();
+            (size.width as usize, size.height as usize)
+        }
+    };
+
     let rule = Rule::from_str(&cli.rule).expect("Invalid rule format");
-    let mut sim = Automaton::new(cli.width, cli.height, rule);
-
-    //if let Some(name) = cli.preset.as_deref() {
-    //    if let Err(e) = apply_preset(name, &mut sim) {
-    //        eprintln!("Error: {}", e);
-    //        return;
-    //    }
-    //}
-
-    let preset_name = cli.preset.unwrap();
+    let mut sim = Automaton::new(width, height, rule);
 
     match cli.ui.as_deref() {
         Some("tui") => {
-            if let Err(e) = tui::run_tui(&mut sim, &preset_name) {
+            // compute terminal size before init
+            // let term = Terminal::new(ratatui::backend::CrosstermBackend::new(std::io::stdout())).unwrap();
+            // let size = term.size().unwrap();
+            // let visible_width = size.width as usize;
+            // let visible_height = size.height as usize;
+
+            // apply preset BEFORE TUI starts
+            if let Some(name) = cli.preset.as_deref() {
+                if let Err(e) = apply_preset(name, &mut sim, width, height) {
+                    eprintln!("Preset error: {e}");
+                    return;
+                }
+            }
+
+            if let Err(e) = tui::run_tui(&mut sim) {
                 eprintln!("TUI error: {}", e);
             }
         }
@@ -82,7 +74,13 @@ fn main() {
             eprintln!("Unsupported UI mode: {other}");
         }
         None => {
-            // fallback to plain terminal mode
+            if let Some(name) = cli.preset.as_deref() {
+                if let Err(e) = apply_preset(name, &mut sim, width, height) {
+                    eprintln!("Preset error: {e}");
+                    return;
+                }
+            }
+
             loop {
                 println!("{}", sim.as_string());
                 sim.tick();
@@ -91,4 +89,3 @@ fn main() {
         }
     }
 }
-
