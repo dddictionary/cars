@@ -16,6 +16,8 @@ pub struct Automaton {
     pub height: usize,   // Number of rows in the grid
     pub grid: Vec<Cell>, // 1D flattened representation of the 2D grid
     pub rule: Rule,      // Birth/survival rules that define cell behavior
+    pub generation: usize,
+    pub live_cells: usize,
 }
 
 impl Automaton {
@@ -34,6 +36,8 @@ impl Automaton {
             height,
             grid: vec![Cell::Dead; width * height],
             rule,
+            generation: 0,
+            live_cells: 0,
         }
     }
 
@@ -44,6 +48,7 @@ impl Automaton {
     /// cells are considered to evolve at the same time.
     pub fn tick(&mut self) {
         let mut new_grid = self.grid.clone();
+        let mut next_live_count = 0;
 
         for y in 0..self.height {
             for x in 0..self.width {
@@ -54,6 +59,7 @@ impl Automaton {
                 new_grid[idx] = match cell {
                     Cell::Alive => {
                         if self.rule.survive.contains(&live_count) {
+                            next_live_count += 1;
                             Cell::Alive
                         } else {
                             Cell::Dead
@@ -61,6 +67,7 @@ impl Automaton {
                     }
                     Cell::Dead => {
                         if self.rule.birth.contains(&live_count) {
+                            next_live_count += 1;
                             Cell::Alive
                         } else {
                             Cell::Dead
@@ -71,6 +78,8 @@ impl Automaton {
         }
 
         self.grid = new_grid;
+        self.generation += 1;
+        self.live_cells = next_live_count;
     }
 
     pub fn set_alive(&mut self, x: usize, y: usize) {

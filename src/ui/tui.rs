@@ -1,4 +1,4 @@
-use crate::engine::Automaton;
+use crate::{engine::Automaton, stats::Stats};
 use color_eyre::Result;
 use crossterm::event::{self, Event};
 use ratatui::{
@@ -6,17 +6,20 @@ use ratatui::{
     widgets::{Paragraph, Wrap},
 };
 
-pub fn run_tui(sim: &mut Automaton) -> Result<()> {
+pub fn run_tui(sim: &mut Automaton, stat_log: &mut Vec<Stats>) -> Result<()> {
     color_eyre::install()?;
     let terminal = ratatui::init();
-    let result = run(terminal, sim);
+    let result = run(terminal, sim, stat_log);
     ratatui::restore();
     result
 }
 
-fn run(mut terminal: DefaultTerminal, sim: &mut Automaton) -> Result<()> {
+fn run(
+    mut terminal: DefaultTerminal,
+    sim: &mut Automaton,
+    stat_log: &mut Vec<Stats>,
+) -> Result<()> {
     // println!("Entered run()"); // Confirm function starts
-
     loop {
         // println!("Drawing frame...");
 
@@ -27,7 +30,11 @@ fn run(mut terminal: DefaultTerminal, sim: &mut Automaton) -> Result<()> {
 
         sim.tick();
         // println!("Ticked simulation");
-
+        stat_log.push(Stats::compute(
+            sim.generation,
+            sim.live_cells,
+            sim.grid.len(),
+        ));
         // Sleep to slow things down and confirm looping
         std::thread::sleep(std::time::Duration::from_millis(100));
 
