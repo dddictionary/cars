@@ -1,36 +1,35 @@
 #!/usr/bin/env bash
-
 set -e
 
-# Allow user to pass custom stats filename (default: stats.csv)
-STATS_FILE="${1:-stats.csv}"
+# Positional args
+RULE="${1:-B3/S23}"                     # Default to B3/S23 if not provided
+STATS_FILE="${2:-stats.csv}"           # Default to stats.csv if not provided
 
-# Constants
+# Environment
 VENV_DIR=".venv"
 PYTHON="$VENV_DIR/bin/python"
 
-# Run the Rust simulation with custom stats file
-./target/debug/cars --preset random --ui tui --stats "$STATS_FILE"
+echo "[+] Running rule: $RULE"
+echo "[+] Saving stats to: $STATS_FILE"
+echo "[+] Logging output to: $LOG_FILE"
 
-# Create Python virtual environment if it doesn't exist
+# Run the simulation and capture output
+${CARGO_TARGET_DIR:-target}/debug/cars \
+  --preset random \
+  --rule "$RULE" \
+  --ui tui \
+  --stats "$STATS_FILE" \
+
+# Setup Python venv if needed
 if [ ! -d "$VENV_DIR" ]; then
     echo "[+] Creating Python virtual environment..."
     python3 -m venv "$VENV_DIR"
 fi
 
-# Install dependencies silently
 echo "[+] Installing Python dependencies..."
 "$PYTHON" -m pip install --quiet --upgrade pip
 "$PYTHON" -m pip install --quiet pandas matplotlib
 
-# Run the plot script with the specified stats file
-echo "[+] Plotting results from $STATS_FILE..."
+echo "[+] Plotting results..."
 "$PYTHON" plot.py "$STATS_FILE"
-
-cleanup() {
-    echo "[!] Script interrupted. Simulation may not be complete."
-    exit 1
-}
-
-trap cleanup SIGINT SIGTERM
 
