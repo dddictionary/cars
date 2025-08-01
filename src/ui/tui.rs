@@ -39,7 +39,7 @@ fn run(
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         if event::poll(std::time::Duration::from_millis(10))? {
-            if let Event::Key(key) = event::read()? {
+            if let Event::Key(_key) = event::read()? {
                 // println!("Received key: {:?}", key);
                 break Ok(());
             }

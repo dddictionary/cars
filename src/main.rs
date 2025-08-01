@@ -122,7 +122,7 @@ fn main() {
                 std::thread::sleep(std::time::Duration::from_millis(150));
             }
 
-            let _ = save_stats(&path, &stat_log);
+            //let _ = save_stats(&path, &stat_log);
         }
     }
 }
