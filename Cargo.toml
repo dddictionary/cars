@@ -1,8 +1,9 @@
 [package]
-name = "cars"
+name = "cars2"
 version = "0.1.0"
 edition = "2024"
 license-file = "LICENSE"
+description = "The second cellular autoamata experiment on crates.io"
 authors = ["Abrar Habib"]
 
 [dependencies]
