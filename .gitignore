@@ -4,3 +4,4 @@
 undo
 .venv
 *.log
+/report
